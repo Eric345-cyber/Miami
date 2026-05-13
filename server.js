@@ -61,7 +61,7 @@ async function init() {
         } catch (_) {}
     });
 
-    const { uri } = await wallet.pair();
+    const { uri } = await wallet.pair({});
     currentUri = uri;
     console.log('URI ready');
 }
