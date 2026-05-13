@@ -1,0 +1,13 @@
+{
+  "name": "qr-server",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@walletconnect/core": "^2.16.2",
+    "@walletconnect/web3wallet": "^1.16.2",
+    "ethers": "^6.13.0"
+  }
+}
