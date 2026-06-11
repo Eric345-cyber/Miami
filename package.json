@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "echo 'No build step needed'",
     "start": "node index.js"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "ethers": "^6.13.1",
+    "express": "^4.19.2"
   }
 }
